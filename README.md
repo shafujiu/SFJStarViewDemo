@@ -39,7 +39,7 @@ rating star  星星评分
 
 图片文件位于`SFJStarView.bundle`资源包中。用户也可以直接跟换内部图片，建议不要改文件名，否者得修改对应代码里面的文件名
 
->补充： bundle文件的创建，为大家提供一种极简的创建bundle文件的方式
+### 补充： bundle文件的创建，为大家提供一种极简的创建bundle文件的方式
 
 1. 创建图片文件夹，建议名字与你的库名字相同。
 2. 将图片文件放入文件夹。
@@ -52,3 +52,38 @@ rating star  星星评分
 // 加bundle后
 [UIImage imageNamed:@"SFJStarView.bundle/gray"]
 ```
+### 其他
+评分范围的考虑，评分范围必须保证在0 - 1之间，所以我们在setRating里面对rating值进行了限制。
+```Objective-c
+- (void)setRating:(CGFloat)rating{
+    _rating = rating;
+    if (rating > 1 ) _rating = 1;
+    if (rating < 0 ) _rating = 0;
+    [self setNeedsLayout];
+}
+```
+
+滑动评分的时候，边界处理。
+当我们滑动到最左侧或者最右侧的时候，你会发现rating到不了 0 或者 1。原因是我们touchesMoved中，手指滑动的时候已经超出范围setRating:也就不在被调用
+```Objective-c
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    UITouch *touch = [touches anyObject];
+    CGPoint point = [touch locationInView:self];
+    CGFloat rating = point.x  / self.frame.size.width;
+    [self setRating:rating];
+}
+```
+
+解决办法，扩大手指滑动时候的响应范围。
+```Objective-c
+// 扩大响应范围
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event{
+    CGRect rect = self.bounds;
+    rect = CGRectInset(rect, -20, -10); // - 增加   + 缩减
+    return CGRectContainsPoint(rect, point);
+}
+```
+
+
+
+
